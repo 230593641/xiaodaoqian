@@ -4,6 +4,10 @@
 
 纯本地运行：**不联网、不依赖任何 API、不收集任何数据**，双击 `index.html` 就能用。
 
+## 🚀 在线体验
+
+不用下载，点开就能玩：**https://230593641.github.io/xiaodaoqian/**
+
 ![demo](screenshot.png)
 
 ## ✨ 功能
@@ -19,7 +23,7 @@
 ### 本地使用
 
 ```bash
-git clone https://github.com/<你的用户名>/xiaodaoqian.git
+git clone https://github.com/230593641/xiaodaoqian.git
 cd xiaodaoqian
 # 直接双击 index.html 即可，或用任意静态服务器
 python3 -m http.server 8000
