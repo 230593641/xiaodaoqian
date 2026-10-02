@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>道个小歉 · 开口难救场器</title>
+<meta name="description" content="道歉、催还钱、拒绝借钱、砍价、请假、辞职……那些开口很难的场面，帮你把话说到位。可爱小人陪你开口。开源免费，本地运行。">
+<style>
+  :root{
+    --bg:#faf6ef;
+    --card:#ffffff;
+    --ink:#4a3f35;
+    --sub:#8d7f70;
+    --coral:#f2906b;
+    --coral-2:#f7b26b;
+    --mint:#7fb8a2;
+    --line:#efe6d8;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html,body{background:var(--bg);color:var(--ink);font-family:"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;}
+  .wrap{max-width:720px;margin:0 auto;padding:28px 18px 60px;}
+
+  /* 头部 */
+  header{text-align:center;padding:26px 0 6px;}
+  header .logo{font-size:34px;font-weight:800;letter-spacing:2px;}
+  header .logo span{color:var(--coral);}
+  header .slogan{margin-top:8px;font-size:14px;color:var(--sub);line-height:1.7;}
+
+  /* 卡片通用 */
+  .card{background:var(--card);border:1.5px solid var(--line);border-radius:20px;padding:20px;box-shadow:0 6px 20px rgba(74,63,53,.05);}
+
+  /* 场景选择 */
+  .sec-title{font-size:15px;font-weight:700;margin:22px 0 12px;display:flex;align-items:center;gap:8px;}
+  .sec-title::before{content:"";width:6px;height:18px;border-radius:3px;background:var(--coral);}
+  .scenes{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+  .scene-btn{padding:14px 6px;border-radius:14px;border:2px solid var(--line);background:#fff;font-size:15px;font-weight:600;color:var(--ink);cursor:pointer;transition:all .18s;line-height:1.4;}
+  .scene-btn small{display:block;font-size:11px;font-weight:400;color:var(--sub);margin-top:2px;}
+  .scene-btn:hover{border-color:var(--coral);transform:translateY(-2px);}
+  .scene-btn.on{background:var(--coral);border-color:var(--coral);color:#fff;}
+  .scene-btn.on small{color:rgba(255,255,255,.85);}
+
+  /* 生成按钮 */
+  .go-wrap{text-align:center;margin:22px 0 0;}
+  .go-btn{display:inline-block;padding:14px 46px;border:none;border-radius:999px;background:linear-gradient(135deg,var(--coral),var(--coral-2));color:#fff;font-size:17px;font-weight:700;letter-spacing:2px;cursor:pointer;box-shadow:0 8px 18px rgba(242,144,107,.35);transition:all .18s;}
+  .go-btn:active{transform:scale(.96);}
+  .go-btn.disable{filter:grayscale(.6);opacity:.55;pointer-events:none;}
+
+  /* 舞台：小人 + 气泡 */
+  .stage{margin-top:24px;text-align:center;position:relative;min-height:290px;display:none;}
+  .stage.show{display:block;animation:fadeUp .5s ease;}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
+  .bubble{display:inline-block;background:#fff;border:2px solid var(--coral);border-radius:16px;padding:10px 16px;font-size:15px;font-weight:600;color:var(--ink);position:relative;margin-bottom:14px;max-width:340px;box-shadow:0 4px 12px rgba(242,144,107,.18);}
+  .bubble::after{content:"";position:absolute;left:50%;bottom:-12px;transform:translateX(-50%);border:8px solid transparent;border-top-color:var(--coral);border-bottom:0;}
+  .bubble::before{content:"";position:absolute;left:50%;bottom:-8px;transform:translateX(-50%);border:7px solid transparent;border-top-color:#fff;border-bottom:0;z-index:1;}
+  .bubble .who{display:block;font-size:12px;color:var(--sub);font-weight:400;margin-top:4px;}
+
+  /* SVG 小人 */
+  .doll{width:170px;margin:0 auto;}
+  .doll svg{width:100%;height:auto;display:block;}
+  .bow-group{transform-origin:100px 200px;animation:bow 2.4s ease-in-out infinite;}
+  @keyframes bow{
+    0%,100%{transform:rotate(0deg);}
+    20%{transform:rotate(-16deg);}
+    40%{transform:rotate(0deg);}
+    60%{transform:rotate(-16deg);}
+    80%{transform:rotate(0deg);}
+  }
+  .blush{animation:blushPulse 2.4s ease-in-out infinite;}
+  @keyframes blushPulse{0%,100%{opacity:.55;}50%{opacity:.95;}}
+  .tear{animation:tearDrop 2.4s ease-in-out infinite;}
+  @keyframes tearDrop{0%,18%{opacity:0;transform:translateY(-2px);}26%,70%{opacity:.9;transform:translateY(6px);}74%,100%{opacity:0;transform:translateY(10px);}}
+  .cloud{animation:cloudFloat 3s ease-in-out infinite;}
+  @keyframes cloudFloat{0%,100%{transform:translateY(0);}50%{transform:translateY(-4px);}}
+
+  /* 话术卡片 */
+  .result{margin-top:24px;display:none;}
+  .result.show{display:block;animation:fadeUp .5s ease;}
+  .cards{display:grid;gap:12px;}
+  .speech{background:#fff;border:1.5px solid var(--line);border-radius:16px;padding:14px 16px;position:relative;}
+  .speech .tag{display:inline-block;font-size:11px;font-weight:700;padding:3px 10px;border-radius:999px;color:#fff;margin-bottom:8px;}
+  .tag.cheng{background:var(--coral);}
+  .tag.humor{background:var(--mint);}
+  .tag.formal{background:#8b9dc3;}
+  .speech textarea{width:100%;border:none;outline:none;resize:none;font-size:14.5px;line-height:1.75;color:var(--ink);background:transparent;font-family:inherit;min-height:64px;}
+  .speech .foot{display:flex;justify-content:flex-end;align-items:center;margin-top:6px;gap:10px;}
+  .speech .again{font-size:12px;color:var(--sub);cursor:pointer;user-select:none;}
+  .speech .again:hover{color:var(--coral);}
+  .copy-btn{font-size:12.5px;font-weight:600;padding:6px 16px;border:none;border-radius:999px;background:var(--ink);color:#fff;cursor:pointer;transition:all .15s;}
+  .copy-btn:active{transform:scale(.94);}
+  .copy-btn.done{background:var(--mint);}
+
+  .hint{text-align:center;font-size:12px;color:var(--sub);margin-top:14px;}
+
+  /* 底部说明 */
+  footer{margin-top:40px;text-align:center;font-size:12px;color:var(--sub);line-height:1.9;}
+  footer b{color:var(--ink);}
+
+  @media (max-width:520px){
+    .scenes{grid-template-columns:repeat(2,1fr);}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="logo">道<span>个</span>小歉</div>
+    <div class="slogan">道歉 催还钱 拒绝借钱 砍价 请假 辞职<br>那些开口很难的场面 帮你把话说到位</div>
+  </header>
+
+  <section>
+    <div class="sec-title">挑一个难开口的场面</div>
+    <div class="scenes" id="scenes"></div>
+  </section>
+
+  <div class="go-wrap">
+    <button class="go-btn disable" id="goBtn">帮我开口</button>
+  </div>
+
+  <!-- 舞台 -->
+  <section class="stage card" id="stage">
+    <div class="bubble" id="bubble">对不起啦<span class="who" id="bubbleWho"></span></div>
+    <div class="doll">
+      <svg viewBox="0 0 200 220" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <g class="bow-group">
+          <!-- 地面阴影 -->
+          <ellipse cx="100" cy="205" rx="52" ry="7" fill="rgba(74,63,53,.08)"/>
+          <!-- 腿 -->
+          <rect x="82" y="176" width="13" height="26" rx="6" fill="#e8b98a"/>
+          <rect x="105" y="176" width="13" height="26" rx="6" fill="#e8b98a"/>
+          <!-- 身体 -->
+          <rect x="70" y="118" width="60" height="64" rx="22" fill="#f2906b"/>
+          <rect x="82" y="130" width="36" height="6" rx="3" fill="rgba(255,255,255,.35)"/>
+          <!-- 手（身前合十） -->
+          <circle cx="87" cy="146" r="10" fill="#f7c89a"/>
+          <circle cx="113" cy="146" r="10" fill="#f7c89a"/>
+          <!-- 脖子 -->
+          <rect x="93" y="104" width="14" height="14" rx="5" fill="#f7c89a"/>
+          <!-- 头 -->
+          <circle cx="100" cy="78" r="38" fill="#ffe0bd"/>
+          <!-- 呆毛 -->
+          <path d="M100 38 Q112 24 118 34 Q106 40 100 42 Z" fill="#5b4632"/>
+          <!-- 眼 -->
+          <circle cx="86" cy="74" r="6" fill="#4a3f35"/>
+          <circle cx="114" cy="74" r="6" fill="#4a3f35"/>
+          <circle cx="88" cy="72" r="2" fill="#fff"/>
+          <circle cx="116" cy="72" r="2" fill="#fff"/>
+          <!-- 腮红 -->
+          <g class="blush">
+            <ellipse cx="74" cy="88" rx="7" ry="4.5" fill="#f79a8e"/>
+            <ellipse cx="126" cy="88" rx="7" ry="4.5" fill="#f79a8e"/>
+          </g>
+          <!-- 嘴（委屈） -->
+          <path d="M92 96 Q100 102 108 96" stroke="#8a5a3b" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+          <!-- 汗滴 -->
+          <path class="tear" d="M130 52 Q134 58 130 66 Q126 58 130 52 Z" fill="#7fb8d8"/>
+          <!-- 头顶云 -->
+          <g class="cloud">
+            <ellipse cx="152" cy="36" rx="11" ry="8" fill="#fff" stroke="#efe6d8" stroke-width="1.5"/>
+            <ellipse cx="163" cy="41" rx="8" ry="6" fill="#fff" stroke="#efe6d8" stroke-width="1.5"/>
+          </g>
+        </g>
+      </svg>
+    </div>
+  </section>
+
+  <!-- 话术结果 -->
+  <section class="result" id="result">
+    <div class="sec-title">三版话术 挑顺口的用</div>
+    <div class="cards" id="cards"></div>
+    <div class="hint">点卡片里的文字可以直接改 改完复制就行</div>
+  </section>
+
+  <footer>
+    <b>道个小歉 · 开口难救场器</b><br>
+    纯本地运行 不联网 不收集任何数据 开源 MIT<br>
+    觉得有用 给个 star 或者告诉一个朋友 就是最大的支持
+  </footer>
+</div>
+
+<script>
+/* ============ 话术库 ============ */
+const SCENES = [
+  {
+    id:"apology", name:"道歉", desc:"说错话 搞砸事",
+    targets:["对象","同事","朋友","老师","爸妈","领导"],
+    events:["在群里说错话","开会时顶撞了你","把重要的事搞砸了","忘了答应你的事","一时冲动说了难听的话","迟到了还顶嘴"],
+    fixes:["请一顿饭赔罪","下次一定提前确认","把这件事补救好","以后说话先过脑子"],
+    templates:[
+      {tag:"诚恳", cls:"cheng", tpl:"{target}，{event}，是我没处理好，回来我越想越不对，当面跟你说声对不起。不是敷衍，我是真的想改，后续我会{fix}。"},
+      {tag:"幽默", cls:"humor", tpl:"{target}，我知道现在说什么都像狡辩，先给您鞠个躬。{event}是我脑子抽了，下次一定带脑子上场。"},
+      {tag:"正式", cls:"formal", tpl:"{target}，关于{event}这件事，我认真复盘过了，问题主要在我。给你造成困扰很抱歉，后续我会{fix}，希望你能接受。"}
+    ]
+  },
+  {
+    id:"collect", name:"催还钱", desc:"钱借出去收不回",
+    targets:["哥们","朋友","同事","亲戚"],
+    events:["上次吃饭垫的","上个月借你的那笔","之前说好的那笔"],
+    templates:[
+      {tag:"诚恳", cls:"cheng", tpl:"{target}，{event}钱，我最近手头也有点紧，你看方便的话这两天还我一下？真不方便也跟我说一声，我等等没事。"},
+      {tag:"幽默", cls:"humor", tpl:"{target}，我最近穷得叮当响，想起{event}钱还在你那儿度假，您老人家要是不忙了，让它回家呗。"},
+      {tag:"正式", cls:"formal", tpl:"{target}，打扰了，{event}款项已到之前说好的期限，方便的话请安排一下，谢谢理解。"}
+    ]
+  },
+  {
+    id:"refuse", name:"拒绝借钱", desc:"开口借钱 不好拒绝",
+    targets:["哥们","朋友","同事","亲戚"],
+    events:["你急用钱这事","你说想借一笔"],
+    templates:[
+      {tag:"诚恳", cls:"cheng", tpl:"{target}，{event}我是真放心上想了，但我手头也确实紧，帮不上这个忙，跟你说句实话。"},
+      {tag:"幽默", cls:"humor", tpl:"{target}，我要是告诉你我卡里就剩三顿饭钱，你信吗？{event}我是有心无力啊。"},
+      {tag:"正式", cls:"formal", tpl:"{target}，关于{event}，我考虑了自己目前的情况，暂时没法提供，希望你能理解。"}
+    ]
+  },
+  {
+    id:"bargain", name:"砍价", desc:"想便宜点 开不了口",
+    targets:["老板","老板娘","店家"],
+    events:["这个","这件东西"],
+    templates:[
+      {tag:"诚恳", cls:"cheng", tpl:"{target}，{event}我是真心想要，但预算确实有限，你看能不能再给个实在价？"},
+      {tag:"幽默", cls:"humor", tpl:"{target}，我都蹲你摊位半小时了，诚意拉满，{event}再让一点，我立马拿走不磨叽。"},
+      {tag:"正式", cls:"formal", tpl:"{target}，您好，{event}的价格我对比过行情，能否在你报价的基础上适当优惠一些？"}
+    ]
+  },
+  {
+    id:"leave", name:"请假", desc:"不好意思开口",
+    targets:["领导","主管","老师","老板"],
+    events:["家里临时有事","身体不太舒服","有个重要安排"],
+    templates:[
+      {tag:"诚恳", cls:"cheng", tpl:"{target}，{event}，我想请一天假，手头工作都安排好了，不会耽误进度。"},
+      {tag:"幽默", cls:"humor", tpl:"{target}，我身体今天不太争气，{event}想请个假，工作交接都弄好了，您高抬贵手。"},
+      {tag:"正式", cls:"formal", tpl:"{target}，因{event}需要请假一天，相关工作已交接安排妥当，特此申请，恳请批准。"}
+    ]
+  },
+  {
+    id:"quit", name:"辞职", desc:"不知道怎么开口",
+    targets:["领导","老板","主管"],
+    events:["这段时间"],
+    templates:[
+      {tag:"诚恳", cls:"cheng", tpl:"{target}，感谢{event}的照顾，我学到了很多。但我有别的规划，想申请离职，希望您理解。"},
+      {tag:"幽默", cls:"humor", tpl:"{target}，不是公司不好，是我想出去看看世界了。{event}谢谢您，咱们江湖再见。"},
+      {tag:"正式", cls:"formal", tpl:"{target}，经过慎重考虑，我决定辞去当前职位。感谢{event}的培养，将按规定完成交接。"}
+    ]
+  }
+];
+
+/* 随机工具 */
+const rnd = arr => arr[Math.floor(Math.random()*arr.length)];
+
+/* ============ 渲染场景按钮 ============ */
+const scenesBox = document.getElementById("scenes");
+let currentScene = null;
+
+SCENES.forEach((s,i)=>{
+  const btn = document.createElement("button");
+  btn.className = "scene-btn";
+  btn.innerHTML = s.name + "<small>" + s.desc + "</small>";
+  btn.onclick = ()=>{
+    document.querySelectorAll(".scene-btn").forEach(b=>b.classList.remove("on"));
+    btn.classList.add("on");
+    currentScene = s;
+    document.getElementById("goBtn").classList.remove("disable");
+    // 切场景时重置舞台与结果
+    document.getElementById("stage").classList.remove("show");
+    document.getElementById("result").classList.remove("show");
+  };
+  scenesBox.appendChild(btn);
+});
+
+/* ============ 生成话术 ============ */
+const bubble = document.getElementById("bubble");
+const bubbleWho = document.getElementById("bubbleWho");
+const cardsBox = document.getElementById("cards");
+
+document.getElementById("goBtn").onclick = ()=>{
+  if(!currentScene) return;
+  const s = currentScene;
+  const target = rnd(s.targets);
+  const evt = rnd(s.events||[]);
+  const fix = rnd(s.fixes||[]);
+
+  // 舞台：气泡 + 小人
+  bubbleWho.textContent = "—— 对" + target + "说";
+  bubble.firstChild.textContent = "";
+  bubble.insertBefore(document.createTextNode("对不起啦"), bubbleWho);
+  document.getElementById("stage").classList.remove("show");
+  void document.getElementById("stage").offsetWidth; // 重触发动画
+  document.getElementById("stage").classList.add("show");
+
+  // 三版话术卡片
+  cardsBox.innerHTML = "";
+  s.templates.forEach(t=>{
+    let text = t.tpl
+      .replace("{target}", target)
+      .replace("{event}", evt)
+      .replace("{fix}", fix || "");
+
+    const card = document.createElement("div");
+    card.className = "speech";
+    const tag = document.createElement("span");
+    tag.className = "tag " + t.cls;
+    tag.textContent = t.tag;
+
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    ta.spellcheck = false;
+
+    const foot = document.createElement("div");
+    foot.className = "foot";
+    const again = document.createElement("span");
+    again.className = "again";
+    again.textContent = "换一句";
+    again.onclick = ()=>{
+      const nt = rnd(s.targets);
+      const ne = rnd(s.events||[]);
+      const nf = rnd(s.fixes||[]);
+      ta.value = t.tpl
+        .replace("{target}", nt)
+        .replace("{event}", ne)
+        .replace("{fix}", nf || "");
+      copyBtn.classList.remove("done");
+      copyBtn.textContent = "复制";
+    };
+    const copyBtn = document.createElement("button");
+    copyBtn.className = "copy-btn";
+    copyBtn.textContent = "复制";
+    copyBtn.onclick = ()=>{
+      copyText(ta.value, copyBtn);
+    };
+    foot.appendChild(again);
+    foot.appendChild(copyBtn);
+    card.appendChild(tag);
+    card.appendChild(ta);
+    card.appendChild(foot);
+    cardsBox.appendChild(card);
+  });
+
+  document.getElementById("result").classList.remove("show");
+  void document.getElementById("result").offsetWidth;
+  document.getElementById("result").classList.add("show");
+};
+
+/* ============ 复制 ============ */
+function copyText(text, btn){
+  const done = ()=>{
+    btn.textContent = "已复制";
+    btn.classList.add("done");
+    setTimeout(()=>{ btn.textContent = "复制"; btn.classList.remove("done"); }, 1800);
+  };
+  if(navigator.clipboard && window.isSecureContext){
+    navigator.clipboard.writeText(text).then(done, ()=>{ legacyCopy(text); done(); });
+  }else{
+    legacyCopy(text);
+    done();
+  }
+}
+function legacyCopy(text){
+  const ta = document.createElement("textarea");
+  ta.value = text;
+  ta.style.position = "fixed";
+  ta.style.opacity = "0";
+  document.body.appendChild(ta);
+  ta.select();
+  try{ document.execCommand("copy"); }catch(e){}
+  document.body.removeChild(ta);
+}
+</script>
+</body>
+</html>
